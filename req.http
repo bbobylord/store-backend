@@ -1,0 +1,7 @@
+
+POST http://localhost:3000/user/login
+content-type: application/json
+
+{
+    "phone": "093748672755"
+}

@@ -2,7 +2,11 @@ const express = require("express");
 const { default: mongoose } = require("mongoose");
 const morgan = require("morgan");
 const path = require("path");
+const createError = require("http-errors");
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
 const { allRouter } = require("./router/router");
+
 module.exports = class Aplication {
   #app = express();
   #DB_URI;
@@ -24,6 +28,23 @@ module.exports = class Aplication {
     this.#app.use(express.json());
     this.#app.use(express.urlencoded({ extended: true }));
     this.#app.use(express.static(path.join(__dirname + ".." + "public")));
+    this.#app.use(
+      "/api-doc",
+      swaggerUI.serve,
+      swaggerUI.setup(
+        swaggerJsDoc({
+          swaggerDefinition: {
+            info: {
+              title: "api shop",
+              version: "1.0.0",
+              description: "",
+            },
+            servers: [{ url: "http://localhost:3000" }],
+          },
+          apis: ["./app/router/**/*.js"],
+        })
+      )
+    );
   }
 
   createServer() {
@@ -58,19 +79,20 @@ module.exports = class Aplication {
 
   errorHandling() {
     this.#app.use((req, res, next) => {
-      return res.status(404).json({
-        status: 404,
-        message: "آدرس مورد نظر یافت نشد",
-      });
+      next(createError.NotFound());
     });
 
     this.#app.use((error, req, res, next) => {
-      const statusCode = error.status || 500;
-      const message = error.message || " Internall Error";
+      const serverError = createError.InternalServerError();
+
+      const statusCode = error.status || serverError.status;
+      const message = error.message || serverError.message;
 
       return res.status(statusCode).json({
-        status: statusCode,
-        message: message,
+        error: {
+          status: statusCode,
+          message: message,
+        },
       });
     });
   }
