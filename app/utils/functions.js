@@ -8,12 +8,11 @@ const randomNumberGenerator = () => {
 };
 
 const signAccessToken = (userID) => {
-  return new Promise((resolve, reject) => {
-    const user = UserModel.findById(userID);
+  return new Promise(async (resolve, reject) => {
+    const user = await UserModel.findById(userID);
 
     const payload = {
       mobile: user.mobile,
-      userID: user._id,
     };
 
     const secretKey = SECRET_KEY_JWT;
